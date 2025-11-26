@@ -1,687 +1,610 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GYMora — Personal Fitness Hub</title>
-
-<!-- Chart.js for progress charts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GYMora – Fitness & AI Coach</title>
 
 <style>
-  :root{
-    --bg: #0f1724;
-    --card: #0b1220;
-    --muted: #94a3b8;
-    --accent-solid: #7b66ff;
-    --accent-grad: linear-gradient(90deg,#6b5bff,#ff7bac);
-    --glass: rgba(255,255,255,0.03);
-    --radius: 14px;
-    --outline: 2px;
-    --success: #22c55e;
-  }
-  :root.light{
-    --bg: #f6f8fb;
-    --card: #ffffff;
-    --muted: #475569;
-    --accent-solid: #6b5bff;
-    --glass: rgba(0,0,0,0.03);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:#e6eef8}
-  body.light{color:#0b1220}
+/* ---------- GLOBAL RESET ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
 
-  /* layout */
-  .app{display:grid;grid-template-columns:72px 1fr;min-height:100vh}
-  @media (max-width:900px){ .app{grid-template-columns:64px 1fr} }
-  @media (max-width:640px){ .app{grid-template-columns:56px 1fr} }
+body {
+    background: #0d1117;
+    color: #fff;
+    overflow-x: hidden;
+}
 
-  /* sidebar */
-  .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:14px;border-right:1px solid rgba(255,255,255,0.03)}
-  .logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;background:var(--accent-solid);color:white;box-shadow:0 6px 18px rgba(123,102,255,0.18);cursor:default}
-  .navbtn{width:48px;height:48px;border-radius:12px;border:var(--outline) solid rgba(255,255,255,0.03);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .12s, background .18s, color .18s;font-size:16px}
-  .navbtn:hover{transform:translateY(-4px); color:white; background:var(--glass)}
-  .navbtn.active{background:linear-gradient(180deg, rgba(123,102,255,0.14), rgba(255,124,160,0.06)); color:white}
-  .sidebar .spacer{flex:1}
+/* ---------- LAYOUT ---------- */
+.container {
+    display: flex;
+    height: 100vh;
+}
 
-  /* main and topbar */
-  .main{padding:14px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-  .search{flex:1;background:var(--card);padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);display:flex;gap:8px;align-items:center;min-width:0}
-  .search input{flex:1;border:0;background:transparent;color:inherit;outline:none}
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+    width: 70px;
+    background: #111827;
+    padding: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+}
 
-  /* buttons */
-  .outline-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:var(--outline) solid var(--accent-solid);background:transparent;color:inherit;cursor:pointer;transition:transform .12s, box-shadow .12s}
-  .outline-btn:active{transform:scale(.98)}
-  .outline-btn .dot{width:10px;height:10px;border-radius:3px;background:var(--accent-solid)}
-  .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:var(--accent-solid);color:white;cursor:pointer;box-shadow:0 8px 30px rgba(99,73,255,0.14);transition:transform .12s}
-  .btn-primary:active{transform:translateY(2px) scale(.995)}
+.sidebar .logo {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
 
-  /* cards and grid */
-  .card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);margin-bottom:14px;border:1px solid rgba(255,255,255,0.02)}
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
-  .col-4{grid-column:span 4}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-12{grid-column:span 12}
-  @media (max-width:900px){ .grid{grid-template-columns:repeat(6,1fr)} .col-8{grid-column:span 6} .col-4{grid-column:span 6} }
-  @media (max-width:640px){ .grid{grid-template-columns:repeat(4,1fr)} .col-6{grid-column:span 4} .col-4{grid-column:span 4} }
+.sidebar button {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: #1f2937;
+    border: 1px solid #384152;
+    color: #fff;
+    font-size: 18px;
+    transition: 0.2s;
+}
 
-  h1,h2{margin:0 0 8px 0}
-  p{margin:0;color:var(--muted)}
+.sidebar button:hover {
+    transform: scale(1.1);
+    background: #374151;
+}
 
-  /* small */
-  label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
-  input[type="number"], input[type="text"], select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
-  .mini{padding:8px 10px;font-size:13px;border-radius:10px}
-  .row{display:flex;gap:8px;flex-wrap:wrap}
-  .small{font-size:13px;color:var(--muted)}
+/* ---------- MAIN CONTENT ---------- */
+.main {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+}
 
-  /* chat */
-  #chatBox{height:220px;overflow:auto;padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px;display:flex;flex-direction:column}
-  .msg{padding:8px 10px;border-radius:10px;margin-bottom:8px;display:inline-block;max-width:86%}
-  .msg.user{background:linear-gradient(90deg,#6b5bff22,#ff7bac22);align-self:flex-end}
-  .msg.bot{background:rgba(255,255,255,0.02);align-self:flex-start}
+.section {
+    display: none;
+}
 
-  /* table */
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
-  .muted-2{color:rgba(255,255,255,0.55);font-size:12px}
+.section.active {
+    display: block;
+}
 
-  /* toast */
-  .toast{position:fixed;right:18px;bottom:18px;background:var(--card);padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 36px rgba(2,6,23,0.6);transition:transform .2s,opacity .2s}
+h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
 
-  input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 6px 20px rgba(123,102,255,0.06);border-color:rgba(123,102,255,0.4)}
-  .chart-wrap{height:210px}
+/* BUTTONS */
+.btn {
+    background: #6366f1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    color: #fff;
+    margin-top: 8px;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+  /* ---------- WORKOUT CARDS ---------- */
+.card {
+    background: #111827;
+    padding: 18px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #1f2937;
+}
+
+.card h2 {
+    margin-bottom: 10px;
+    font-size: 22px;
+}
+
+/* INPUT */
+.input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 10px;
+    border: 1px solid #374151;
+    background: #0f172a;
+    color: #fff;
+}
+
+/* RESULT TEXT */
+.result {
+    margin-top: 12px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: row;
+    }
+    .sidebar {
+        width: 65px;
+    }
+}
 </style>
 </head>
+
 <body>
-<div id="app" class="app">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" aria-label="Main navigation">
-    <div class="logo" title="GYMora">GYM</div>
+<div class="container">
 
-    <button class="navbtn active" data-page="dashboard" title="Dashboard" aria-label="Dashboard" onclick="navTo(event)">🏠</button>
-    <button class="navbtn" data-page="calc" title="Calculators" onclick="navTo(event)">⚖️</button>
-    <button class="navbtn" data-page="bot" title="AI Bot" onclick="navTo(event)">🤖</button>
-    <button class="navbtn" data-page="workouts" title="Workouts" onclick="navTo(event)">🏋️</button>
-    <button class="navbtn" data-page="timer" title="Timer" onclick="navTo(event)">⏱️</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo">GYM</div>
 
-    <div class="spacer"></div>
-    <button class="navbtn" id="themeToggle" title="Toggle theme" onclick="toggleTheme()">🌙</button>
-    <button class="navbtn" title="Export" onclick="exportData()">⬇️</button>
-    <button class="navbtn" title="Import" onclick="importData()">⬆️</button>
- <main class="main" role="main">
-    <div class="topbar">
-      <div class="search card" style="max-width:760px">
-        <svg width="18" height="18" viewBox="0 0 24 24" style="opacity:.7"><path fill="currentColor" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"></path></svg>
-        <input id="quickSearch" placeholder="Search exercises, diets, bot..." onkeydown="if(event.key==='Enter'){quickSearch()}">
-        <button class="outline-btn" onclick="quickSearch()"><span class="dot"></span>Search</button>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="small muted">Welcome, <strong id="userName">User</strong></div>
-        <button class="outline-btn" onclick="openAssistant()"><span style="font-weight:700">AI</span> Bot</button>
-        <button class="btn-primary" onclick="startQuickWorkout()">Start Quick</button>
-      </div>
+        <button onclick="showSection('home')">🏠</button>
+        <button onclick="showSection('workout')">💪</button>
+        <button onclick="showSection('calculator')">🧮</button>
+        <button onclick="showSection('stopwatch')">⏱️</button>
+        <button onclick="showSection('bot')">🤖</button>
+        <button onclick="toggleTheme()">🌙</button>
     </div>
 
-    <!-- PAGES -->
-    <section id="dashboard" class="page">
-      <div class="grid">
-        <div class="card col-8">
-          <h1>Daily Plan</h1>
-          <p class="small muted">Auto-generated based on your profile and goals</p>
+    <!-- MAIN CONTENT -->
+    <div class="main">
 
-          <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
-            <div style="flex:1;min-width:220px" class="card">
-              <h2>Today's Workout</h2>
-              <div id="todayWorkout">Loading...</div>
-              <div style="margin-top:8px" class="row">
-                <button class="outline-btn mini" onclick="completeWorkout()">Mark Complete</button>
-                <button class="outline-btn mini" onclick="logWorkoutManually()">Log Manually</button>
-              </div>
+        <!-- HOME -->
+        <div id="home" class="section active">
+            <h1>Welcome to GYMora</h1>
+            <p>Your complete AI fitness assistant.</p>
+        </div>
+
+        <!-- WORKOUT SECTION -->
+        <div id="workout" class="section">
+            <h1>Workout Plan</h1>
+
+            <div class="card">
+                <h2>Full Body Routine</h2>
+                <ul>
+                    <li>Push Ups — 3 x 15</li>
+                    <li>Squats — 3 x 20</li>
+                    <li>Plank — 3 x 60 sec</li>
+                    <li>Lunges — 3 x 12</li>
+                </ul>
             </div>
 
-            <div style="flex:1;min-width:220px" class="card">
-              <h2>Today's Diet</h2>
-              <div id="todayDiet">Loading...</div>
+            <div class="card">
+                <h2>HIIT Quick Session</h2>
+                <ul>
+                    <li>30 sec Jumping Jacks</li>
+                    <li>30 sec Burpees</li>
+                    <li>30 sec Mountain Climbers</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CALCULATOR SECTION -->
+        <div id="calculator" class="section">
+            <h1>Fitness Calculators</h1>
+
+            <div class="grid">
+
+                <!-- BMI -->
+                <div class="card">
+                    <h2>BMI Calculator</h2>
+                    <input id="bmiWeight" class="input" type="number" placeholder="Weight (kg)">
+                    <input id="bmiHeight" class="input" type="number" placeholder="Height (cm)">
+                    <button class="btn" onclick="calcBMI()">Calculate</button>
+                    <div id="bmiResult" class="result"></div>
+                </div>
+
+                <!-- Calorie -->
+                <div class="card">
+                    <h2>Calorie Intake</h2>
+                    <input id="calWeight" class="input" type="number" placeholder="Weight (kg)">
+                    <input id="calHeight" class="input" type="number" placeholder="Height (cm)">
+                    <input id="calAge" class="input" type="number" placeholder="Age">
+                    <button class="btn" onclick="calcCalories()">Calculate</button>
+                    <div id="calResult" class="result"></div>
+                </div>
+
+            </div>
+        </div>
+        <!-- STOPWATCH SECTION -->
+        <div id="stopwatch" class="section">
+            <h1>Stopwatch & HIIT</h1>
+
+            <div class="card">
+                <h2>Stopwatch</h2>
+                <div id="swDisplay" style="font-size:24px; margin-bottom:10px;">00:00:00</div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" onclick="swStart()">Start</button>
+                    <button class="btn" onclick="swStop()">Stop</button>
+                    <button class="btn" onclick="swReset()">Reset</button>
+                </div>
             </div>
 
-            <div style="min-width:140px" class="card">
-              <h2>Quick Stats</h2>
-              <p class="small"><strong id="statBMI">BMI: —</strong></p>
-              <p class="small"><strong id="statCalories">Calories: —</strong></p>
-              <p class="small"><strong id="statProtein">Protein: —</strong></p>
+            <div class="card">
+                <h2>HIIT Timer</h2>
+                <label>Rounds</label>
+                <input id="hiitRounds" class="input" type="number" value="6">
+                <label>Work (sec)</label>
+                <input id="hiitWork" class="input" type="number" value="30">
+                <label>Rest (sec)</label>
+                <input id="hiitRest" class="input" type="number" value="15">
+                <div style="margin-top:10px;">
+                    <button class="btn" onclick="startHIIT()">Start HIIT</button>
+                    <button class="btn" onclick="stopHIIT()">Stop</button>
+                </div>
+                <div id="hiitDisplay" style="margin-top:10px;font-weight:bold;"></div>
             </div>
-          </div>
+        </div>
 
-          <div style="margin-top:14px" class="card">
-            <h2>Progress</h2>
-            <div class="chart-wrap">
-              <canvas id="weightChart"></canvas>
+        <!-- BOT / AI SECTION -->
+        <div id="bot" class="section">
+            <h1>GYMora AI Bot</h1>
+
+            <div class="card">
+                <div id="chatBox" style="height:240px; overflow:auto; background:#0b1220; padding:10px; border-radius:8px;"></div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input id="botInput" class="input" placeholder="Ask about workouts, diet, supplements...">
+                    <button class="btn" onclick="botSend()">Send</button>
+                </div>
             </div>
-            <div class="small muted" style="margin-top:8px">Log weight below to view chart</div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <input type="number" id="logWeight" placeholder="Weight (kg)">
-              <button class="outline-btn" onclick="addWeight()">Log</button>
+
+            <div class="card">
+                <h2>Protein Guide</h2>
+                <div id="proteinList"></div>
             </div>
-          </div>
         </div>
 
-        <div class="col-4">
-          <div class="card">
-            <h2>Protein Guide</h2>
-            <p class="small muted">What to eat for protein</p>
-            <ul id="proteinList" style="margin-top:8px"></ul>
-          </div>
+        <!-- FOOTER AREA inside main -->
+        <div style="height:40px"></div>
 
-          <div class="card">
-            <h2>Stopwatch</h2>
-            <div id="stopwatchDisplay" style="font-size:20px">00:00:00</div>
-            <div style="margin-top:8px" class="row">
-              <button class="outline-btn mini" onclick="swStart()">Start</button>
-              <button class="outline-btn mini" onclick="swStop()">Stop</button>
-              <button class="outline-btn mini" onclick="swReset()">Reset</button>
-            </div>
-          </div>
+    </div> <!-- end main -->
+</div> <!-- end container -->
 
-          <div class="card">
-            <h2>AI Tip</h2>
-            <p id="aiTip">Ask the AI Bot about exercise form, diet swaps, or how to progress.</p>
-            <div style="margin-top:8px" class="small muted">Tip updates every day</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="calc" class="page" style="display:none;">
-      <div class="grid">
-        <div class="card col-6">
-          <h2>BMI & Body</h2>
-          <label>Height (cm)</label><input id="height" type="number" placeholder="170">
-          <label>Weight (kg)</label><input id="weight" type="number" placeholder="70">
-          <label>Age</label><input id="age" type="number" placeholder="25">
-          <label>Gender</label>
-          <select id="gender"><option value="male">Male</option><option value="female">Female</option></select>
-          <label>Activity</label>
-          <select id="activity">
-            <option value="1.2">Sedentary</option>
-            <option value="1.375">Light</option>
-            <option value="1.55">Moderate</option>
-            <option value="1.725">Active</option>
-            <option value="1.9">Very Active</option>
-          </select>
-          <div style="margin-top:10px" class="row">
-            <button class="btn-primary" onclick="calculateAll()">Calculate</button>
-            <button class="outline-btn" onclick="saveProfile()">Save</button>
-          </div>
-          <div style="margin-top:10px" id="calcResult"></div>
-        </div>
-
-        <div class="card col-6">
-          <h2>Macro Helper</h2>
-          <p class="small muted">Adjust percentages if you want</p>
-          <label>Protein %</label><input id="macroProtein" type="number" value="30">
-          <label>Fat %</label><input id="macroFat" type="number" value="25">
-          <label>Carbs %</label><input id="macroCarb" type="number" value="45">
-          <div style="margin-top:10px" class="row">
-            <button class="outline-btn" onclick="calcMacros()">Get Macros</button>
-          </div>
-          <div style="margin-top:10px" id="macroResult"></div>
-        </div>
-
-        <div class="card col-12">
-          <h2>Protein Sources</h2>
-          <div id="proteinSources" class="row"></div>
-        </div>
-      </div>
-    </section>
- <section id="bot" class="page" style="display:none;">
-      <div class="card" style="display:flex;flex-direction:column">
-        <h2>GYMora AI Bot</h2>
-        <div id="chatBox"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input id="botInput" placeholder="Ask about workout, diet, supplements..." onkeydown="if(event.key==='Enter'){botSend()}">
-          <button class="outline-btn" onclick="botSend()">Send</button>
-        </div>
-        <div class="small muted" style="margin-top:8px">AI is local rule-based assistant for now — I can integrate a cloud LLM later if you want.</div>
-      </div>
-    </section>
-
-    <section id="workouts" class="page" style="display:none;">
-      <div class="grid">
-        <div class="card col-6">
-          <h2>Workout Library</h2>
-          <p class="small muted">Select a preset or create your own</p>
-          <select id="preset">
-            <option value="beginner">Full Body - Beginner</option>
-            <option value="intermediate">Upper/Lower - Intermediate</option>
-            <option value="advanced">Split - Advanced</option>
-          </select>
-          <div style="margin-top:8px" class="row">
-            <button class="btn-primary" onclick="generatePreset()">Generate</button>
-            <button class="outline-btn" onclick="savePreset()">Save Preset</button>
-          </div>
-
-          <div id="presetView" style="margin-top:12px"></div>
-        </div>
-
-        <div class="card col-6">
-          <h2>Workout Log</h2>
-          <table id="logTable"><thead><tr><th>Date</th><th>Workout</th><th>Notes</th></tr></thead><tbody></tbody></table>
-          <div style="margin-top:8px" class="row">
-            <input id="logNote" placeholder="Quick note">
-            <button class="outline-btn" onclick="addLog()">Add Log</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="timer" class="page" style="display:none;">
-      <div class="grid">
-        <div class="card col-6">
-          <h2>Stopwatch</h2>
-          <div id="sw" style="font-size:28px">00:00:00</div>
-          <div style="margin-top:8px" class="row">
-            <button class="btn-primary" onclick="swStart()">Start</button>
-            <button class="outline-btn" onclick="swStop()">Stop</button>
-            <button class="outline-btn" onclick="swReset()">Reset</button>
-          </div>
-        </div>
-
-        <div class="card col-6">
-          <h2>Interval Timer (HIIT)</h2>
-          <label>Rounds</label><input id="hiitRounds" type="number" value="6">
-          <label>Work (sec)</label><input id="hiitWork" type="number" value="30">
-          <label>Rest (sec)</label><input id="hiitRest" type="number" value="15">
-          <div style="margin-top:8px" class="row">
-            <button class="btn-primary" onclick="startHIIT()">Start HIIT</button>
-            <button class="outline-btn" onclick="stopHIIT()">Stop</button>
-          </div>
-          <div style="margin-top:12px" id="hiitDisplay"></div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- Toast container -->
-<div id="toastRoot" style="position:fixed;right:18px;bottom:18px"></div>
+<!-- small helper modal area -->
+<div id="modalRoot" style="display:none;"></div>
 
 <script>
-/* ---------------------------
-   Utilities & localStorage
-   --------------------------- */
+/* -----------------------
+   Basic helpers & storage
+   ----------------------- */
 const storage = {
-  get(key, fallback){
-    try{ const v = localStorage.getItem(key); return v?JSON.parse(v):fallback }catch(e){return fallback}
-  },
-  set(key,val){ localStorage.setItem(key,JSON.stringify(val)) }
+    get(k, fallback){
+        try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; }
+    },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 
-/* initial user/profile */
-let profile = storage.get('gymora_profile', {
-  name:'Ali', age:25, gender:'male', height:170, weight:70, activity:1.55, goal:'maintain'
-});
-document.getElementById('userName').innerText = profile.name || 'User';
-
-/* theme */
-(function initTheme(){
-  const prefer = localStorage.getItem('gymora_theme');
-  if(prefer === 'light'){ document.body.classList.add('light'); document.documentElement.classList.add('light'); }
-  updateThemeButton();
-})();
-function toggleTheme(){
-  document.body.classList.toggle('light');
-  document.documentElement.classList.toggle('light');
-  localStorage.setItem('gymora_theme', document.body.classList.contains('light') ? 'light' : 'dark');
-  updateThemeButton(); toast('Theme changed');
-}
-function updateThemeButton(){
-  const t = document.body.classList.contains('light') ? '🌞' : '🌙';
-  document.getElementById('themeToggle').innerText = t;
+function showSection(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if(el) el.classList.add('active');
 }
 
-/* pages nav */
-function navTo(e){
-  const btn = (e.target.closest) ? e.target.closest('button') : e.target;
-  if(!btn || !btn.dataset) return;
-  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const page = btn.dataset.page;
-  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-  const el = document.getElementById(page);
-  if(el) el.style.display='block';
+/* -----------------------
+   BMI & Calories
+   ----------------------- */
+function calcBMI(){
+    const w = Number(document.getElementById('bmiWeight').value);
+    const h = Number(document.getElementById('bmiHeight').value);
+    if(!w || !h){ document.getElementById('bmiResult').innerText = 'Enter values'; return; }
+    const bmi = (w / ((h/100)*(h/100))).toFixed(1);
+    document.getElementById('bmiResult').innerText = `BMI: ${bmi}`;
 }
 
-/* quick search */
-function quickSearch(){
-  const q = document.getElementById('quickSearch').value.toLowerCase();
-  if(!q) return toast('Type something to search');
-  if(q.includes('bot') || q.includes('ai')){ document.querySelector('[data-page="bot"]').click(); return }
-  if(q.includes('bmi')||q.includes('calorie')||q.includes('macro')){ document.querySelector('[data-page="calc"]').click(); return }
-  if(q.includes('timer')||q.includes('hiit')||q.includes('stopwatch')){ document.querySelector('[data-page="timer"]').click(); return }
-  toast('No direct match — try asking the bot');
+function calcCalories(){
+    const w = Number(document.getElementById('calWeight').value);
+    const h = Number(document.getElementById('calHeight').value);
+    const age = Number(document.getElementById('calAge').value);
+    if(!w || !h || !age){ document.getElementById('calResult').innerText = 'Fill all fields'; return; }
+    // simple Mifflin-St Jeor for male default (approx)
+    const bmr = 10*w + 6.25*h - 5*age + 5;
+    const maintenance = Math.round(bmr * 1.55);
+    document.getElementById('calResult').innerText = `Maintenance ≈ ${maintenance} kcal/day`;
 }
 
-/* toast */
-function toast(txt, ms=2200){
-  const root = document.getElementById('toastRoot');
-  const d = document.createElement('div');
-  d.className='toast';
-  d.innerText=txt;
-  root.appendChild(d);
-  setTimeout(()=>{ d.style.opacity=0; d.style.transform='translateY(10px)'; }, ms-300);
-  setTimeout(()=>{ try{ root.removeChild(d) }catch(e){} }, ms);
+/* -----------------------
+   Stopwatch
+   ----------------------- */
+let swInterval = null, swSec = 0;
+function formatTime(t){
+    const h = Math.floor(t/3600), m = Math.floor((t%3600)/60), s = t%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
-/* ---------------------------
-   Calculators: BMI, BMR, Macros
-   --------------------------- */
-function calculateAll(){
-  const h = Number(document.getElementById('height').value) || profile.height;
-  const w = Number(document.getElementById('weight').value) || profile.weight;
-  const age = Number(document.getElementById('age').value) || profile.age;
-  const gender = document.getElementById('gender').value || profile.gender;
-  const activity = Number(document.getElementById('activity').value) || profile.activity;
-
-  const bmi = (w/((h/100)*(h/100))).toFixed(1);
-  let bmr;
-  if(gender==='male') bmr = 10*w + 6.25*h - 5*age + 5;
-  else bmr = 10*w + 6.25*h - 5*age - 161;
-  const maintenance = Math.round(bmr * activity);
-
-  document.getElementById('calcResult').innerHTML =
-    `<p class="small">BMI: <strong>${bmi}</strong> — ${bmiInterpret(bmi)}</p>
-     <p class="small">BMR: <strong>${Math.round(bmr)}</strong> kcal/day</p>
-     <p class="small">Maintenance: <strong>${maintenance}</strong> kcal/day</p>`;
-
-  document.getElementById('statBMI').innerText = `BMI: ${bmi}`;
-  document.getElementById('statCalories').innerText = `Calories: ${maintenance}`;
-
-  profile.height=h; profile.weight=w; profile.age=age; profile.activity=activity; profile.gender=gender;
-  storage.set('gymora_profile', profile);
-  toast('Profile calculated');
+function swStart(){
+    if(swInterval) return;
+    swInterval = setInterval(()=>{ swSec++; document.getElementById('swDisplay').innerText = formatTime(swSec); }, 1000);
 }
+function swStop(){ clearInterval(swInterval); swInterval = null; }
+function swReset(){ swStop(); swSec = 0; document.getElementById('swDisplay').innerText = formatTime(swSec); }
 
-function bmiInterpret(bmi){
-  bmi = Number(bmi);
-  if(bmi<18.5) return 'Underweight';
-  if(bmi<25) return 'Normal';
-  if(bmi<30) return 'Overweight';
-  return 'Obese';
+/* -----------------------
+   HIIT timer
+   ----------------------- */
+let hiitTimer = null;
+function startHIIT(){
+    const rounds = Number(document.getElementById('hiitRounds').value) || 6;
+    const work = Number(document.getElementById('hiitWork').value) || 30;
+    const rest = Number(document.getElementById('hiitRest').value) || 15;
+    let state = { round:1, phase:'WORK', secs: work, rounds, work, rest };
+    document.getElementById('hiitDisplay').innerText = `Round 1/${rounds} — WORK ${work}s`;
+    hiitTimer = setInterval(()=>{
+        state.secs--;
+        if(state.secs <= 0){
+            if(state.phase === 'WORK'){ state.phase = 'REST'; state.secs = state.rest; }
+            else { state.round++; if(state.round > rounds){ stopHIIT(); document.getElementById('hiitDisplay').innerText = 'Complete'; return; } state.phase = 'WORK'; state.secs = state.work; }
+        }
+        document.getElementById('hiitDisplay').innerText = `Round ${state.round}/${rounds} — ${state.phase} ${state.secs}s`;
+    }, 1000);
 }
+function stopHIIT(){ clearInterval(hiitTimer); hiitTimer = null; document.getElementById('hiitDisplay').innerText = 'Stopped'; }
 
-function calcMacros(){
-  const proteinPct = Number(document.getElementById('macroProtein').value)||30;
-  const fatPct = Number(document.getElementById('macroFat').value)||25;
-  const carbPct = Number(document.getElementById('macroCarb').value)||45;
-
-  const maintenance = (() => {
-    const w = (profile.weight||70), h=(profile.height||170), age=(profile.age||25);
-    let bmr = profile.gender === 'male' ? 10*w + 6.25*h - 5*age + 5 : 10*w + 6.25*h - 5*age - 161;
-    return Math.round(bmr * (profile.activity || 1.55));
-  })();
-
-  const protCals = maintenance*(proteinPct/100), fatCals = maintenance*(fatPct/100), carbCals = maintenance*(carbPct/100);
-  const protGr = Math.round(protCals/4), fatGr = Math.round(fatCals/9), carbGr = Math.round(carbCals/4);
-  document.getElementById('macroResult').innerHTML =
-    `<p class="small">Calories: <strong>${maintenance}</strong></p>
-     <p class="small">Protein: <strong>${protGr} g</strong> (${proteinPct}%)</p>
-     <p class="small">Fat: <strong>${fatGr} g</strong> (${fatPct}%)</p>
-     <p class="small">Carbs: <strong>${carbGr} g</strong> (${carbPct}%)</p>`;
-  toast('Macros calculated');
-}
-
-/* protein sources listing */
-const proteinSourcesArr = [
-  {name:'Chicken breast (100g)',protein:31},
-  {name:'Egg (1 large)',protein:6},
-  {name:'Greek Yogurt (100g)',protein:10},
-  {name:'Lentils (100g cooked)',protein:9},
-  {name:'Whey (1 scoop)',protein:24},
-  {name:'Milk (250ml)',protein:8},
+/* -----------------------
+   Simple Bot (rule-based)
+   ----------------------- */
+const botKB = [
+    {keys:['protein','whey','supplement'], reply:'Good protein sources: chicken, eggs, whey, yogurt, lentils. Aim ~1.6-2.2g/kg.'},
+    {keys:['calorie','calories','maintenance'], reply:'Maintenance calories depend on weight/height/activity. Use the calorie calculator.'},
+    {keys:['beginner','start'], reply:'Start with 3 full-body workouts/week: squats, press, row, hinge, core.'},
+    {keys:['hiit','timer','stopwatch'], reply:'Use the built-in HIIT timer. Try 30/15 work/rest for 6 rounds to start.'},
+    {keys:['default'], reply:'I can help with workouts, timers, and simple diet tips. Ask "protein" or "calories".'}
 ];
-function renderProteinSources(){
-  const node = document.getElementById('proteinSources');
-  node.innerHTML='';
-  proteinSourcesArr.forEach(p=>{
-    const el = document.createElement('div');
-    el.className='card';
-    el.style.minWidth='140px';
-    el.innerHTML = `<strong>${p.name}</strong><div class="small muted-2">${p.protein} g protein</div>`;
-    node.appendChild(el);
-  });
-  const pl = document.getElementById('proteinList');
-  if(pl) pl.innerHTML = proteinSourcesArr.slice(0,4).map(p=>`<li>${p.name} — ${p.protein}g</li>`).join('');
-}
-renderProteinSources();
 
-/* ---------------------------
-   Workout generator & logging
-   --------------------------- */
-const presets = {
-  beginner:[
-    {name:'Squats',sets:3,reps:10},
-    {name:'Push-ups',sets:3,reps:10},
-    {name:'Bent-over Row',sets:3,reps:8},
-    {name:'Plank',sets:3,reps:30},
-  ],
-  intermediate:[
-    {name:'Deadlift',sets:4,reps:6},
-    {name:'Bench Press',sets:4,reps:8},
-    {name:'Pull-ups',sets:4,reps:6},
-    {name:'Leg Press',sets:4,reps:10},
-  ],
-  advanced:[
-    {name:'Squat (heavy)',sets:5,reps:5},
-    {name:'Clean & Jerk',sets:5,reps:3},
-    {name:'Weighted Pull-ups',sets:5,reps:5},
-    {name:'Romanian Deadlift',sets:4,reps:6},
-  ],
-};
-function generatePreset(){
-  const p = document.getElementById('preset').value;
-  const list = presets[p];
-  const view = document.getElementById('presetView');
-  view.innerHTML = `<strong>${p.charAt(0).toUpperCase()+p.slice(1)} Program</strong><ol style="margin-top:8px">${list.map(i=>`<li>${i.name} — ${i.sets}×${i.reps}</li>`).join('')}</ol>`;
+function botSend(){
+    const qEl = document.getElementById('botInput');
+    const q = (qEl.value || '').trim();
+    if(!q) return;
+    const box = document.getElementById('chatBox');
+    const u = document.createElement('div'); u.style.alignSelf='flex-end'; u.style.margin='6px 0'; u.style.background='#181a1f'; u.style.padding='8px'; u.style.borderRadius='8px'; u.innerText = q;
+    box.appendChild(u);
+    qEl.value = '';
+    // match
+    const lc = q.toLowerCase();
+    let answer = botKB.find(x=> x.keys.some(k=> lc.includes(k)));
+    if(!answer) answer = botKB.find(x=> x.keys.includes('default'));
+    const a = document.createElement('div'); a.style.alignSelf='flex-start'; a.style.margin='6px 0'; a.style.background='#0b1220'; a.style.padding='8px'; a.style.borderRadius='8px'; a.innerText = answer.reply;
+    box.appendChild(a);
+    box.scrollTop = box.scrollHeight;
 }
-generatePreset();
 
+/* -----------------------
+   Protein list render
+   ----------------------- */
+const proteinList = [
+    {name:'Chicken breast (100g)', p:31},
+    {name:'Egg (1 large)', p:6},
+    {name:'Greek Yogurt (100g)', p:10},
+    {name:'Lentils (100g cooked)', p:9},
+    {name:'Whey (1 scoop)', p:24},
+];
+function renderProtein(){
+    const node = document.getElementById('proteinList');
+    node.innerHTML = proteinList.map(i=>`<div style="padding:8px 0;border-bottom:1px solid #111">${i.name} — <strong>${i.p}g</strong></div>`).join('');
+}
+renderProtein();
+  /* -----------------------
+   THEME (Dark / Light)
+   ----------------------- */
+let theme = storage.get('theme', 'dark');
+
+function applyTheme(){
+    if(theme === 'light'){
+        document.body.style.background = '#f4f4f4';
+        document.body.style.color = '#000';
+
+        document.querySelectorAll('.card').forEach(c=>{
+            c.style.background = '#ffffff';
+            c.style.color = '#000';
+            c.style.border = '1px solid #ddd';
+        });
+
+        document.querySelectorAll('.sidebar').forEach(s=>{
+            s.style.background = '#e5e7eb';
+        });
+
+        document.querySelectorAll('.btn').forEach(b=>{
+            b.style.background = '#4f46e5';
+            b.style.color = '#fff';
+        });
+
+    } else {
+        // DARK
+        document.body.style.background = '#0d1117';
+        document.body.style.color = '#fff';
+
+        document.querySelectorAll('.card').forEach(c=>{
+            c.style.background = '#111827';
+            c.style.color = '#fff';
+            c.style.border = '1px solid #1f2937';
+        });
+
+        document.querySelectorAll('.sidebar').forEach(s=>{
+            s.style.background = '#111827';
+        });
+
+        document.querySelectorAll('.btn').forEach(b=>{
+            b.style.background = '#6366f1';
+            b.style.color = '#fff';
+        });
+    }
+    storage.set('theme', theme);
+}
+
+function toggleTheme(){
+    theme = theme === 'dark' ? 'light' : 'dark';
+    applyTheme();
+}
+
+applyTheme();
+
+/* -----------------------
+   BUTTON CLICK ANIMATION
+   ----------------------- */
+document.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        btn.style.transform = 'scale(0.90)';
+        setTimeout(()=> btn.style.transform = 'scale(1)', 120);
+    });
+});
+
+/* -----------------------
+   Smooth Section Fade
+   ----------------------- */
+document.querySelectorAll('.section').forEach(sec=>{
+    sec.style.transition = '0.3s';
+});/* -----------------------
+   Save profile (from calculator)
+   ----------------------- */
+function saveProfile(){
+    const h = Number(document.getElementById('height')?.value || document.getElementById('bmiHeight')?.value) || null;
+    const w = Number(document.getElementById('weight')?.value || document.getElementById('bmiWeight')?.value) || null;
+    const age = Number(document.getElementById('age')?.value || document.getElementById('calAge')?.value) || null;
+    const gender = (document.getElementById('gender')?.value) || 'male';
+    const activity = Number(document.getElementById('activity')?.value) || 1.55;
+
+    const p = { name: storage.get('gymora_profile', {name:'Ali'}).name || 'Ali', height: h, weight: w, age, gender, activity };
+    storage.set('gymora_profile', p);
+    profile = p;
+    toast('Profile saved');
+    // Refresh daily plan with new data
+    try{ generateDailyPlan(); }catch(e){}
+}
+
+/* -----------------------
+   Logs (workout / simple)
+   ----------------------- */
 function loadLogs(){
-  const logs = storage.get('gymora_logs', []);
-  const tbody = document.querySelector('#logTable tbody');
-  if(!tbody) return;
-  tbody.innerHTML='';
-  logs.slice().reverse().forEach(l=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${l.date}</td><td>${l.workout}</td><td>${l.note||''}</td>`;
-    tbody.appendChild(tr);
-  });
+    const logs = storage.get('gymora_logs', []);
+    const tbody = document.querySelector('#logTable tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    logs.slice().reverse().forEach(l=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${l.date}</td><td>${l.workout}</td><td>${l.note||''}</td>`;
+        tbody.appendChild(tr);
+    });
 }
 loadLogs();
 
 function addLog(){
-  const note = document.getElementById('logNote').value || '';
-  const logs = storage.get('gymora_logs', []);
-  logs.push({date:new Date().toLocaleString(), workout:'Manual', note});
-  storage.set('gymora_logs', logs);
-  document.getElementById('logNote').value='';
-  loadLogs(); toast('Log added');
+    const note = document.getElementById('logNote')?.value || '';
+    const logs = storage.get('gymora_logs', []);
+    logs.push({ date: new Date().toLocaleString(), workout: document.querySelector('#presetView')?.innerText || 'Manual', note });
+    storage.set('gymora_logs', logs);
+    try{ document.getElementById('logNote').value = ''; }catch(e){}
+    loadLogs();
+    toast('Log saved');
 }
 
-/* ---------------------------
-   Weight & Chart
-   --------------------------- */
-let weightData = storage.get('gymora_weights', []);
-function addWeight(){
-  const w = Number(document.getElementById('logWeight').value);
-  if(!w){ toast('Enter a valid weight'); return; }
-  weightData.push({d:new Date().toLocaleDateString(), w});
-  storage.set('gymora_weights', weightData);
-  document.getElementById('logWeight').value='';
-  renderWeightChart();
-  toast('Weight logged');
-}
-function renderWeightChart(){
-  const ctx = document.getElementById('weightChart');
-  const labels = weightData.map(x=>x.d);
-  const data = weightData.map(x=>x.w);
-  if(window.weightChart) window.weightChart.destroy();
-  window.weightChart = new Chart(ctx, {
-    type:'line',
-    data:{labels, datasets:[{label:'Weight (kg)', data, tension:0.35, borderWidth:2, borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-solid') || '#6b5bff', pointRadius:4}]},
-    options:{responsive:true, plugins:{legend:{display:false}}}
-  });
-}
-renderWeightChart();
-
-/* ---------------------------
-   Stopwatch & HIIT (again for timer page)
-   --------------------------- */
-let swInterval = null, swT = 0;
-function swStart(){ if(swInterval) return; swInterval = setInterval(()=>{ swT++; updateSW() }, 1000); toast('Stopwatch started') }
-function swStop(){ clearInterval(swInterval); swInterval=null; toast('Stopped') }
-function swReset(){ swStop(); swT=0; updateSW(); toast('Reset') }
-function updateSW(){ const h=Math.floor(swT/3600), m=Math.floor((swT%3600)/60), s=swT%60; const time = `${pad(h)}:${pad(m)}:${pad(s)}`; document.getElementById('sw').innerText = time; document.getElementById('stopwatchDisplay') && (document.getElementById('stopwatchDisplay').innerText = time) }
-function pad(n){ return n<10 ? '0'+n : '' }
-
-let hiitTimer=null, hiitState={round:0,phase:'stopped',secsLeft:0};
-function startHIIT(){
-  const rounds=Number(document.getElementById('hiitRounds').value)||6;
-  const work=Number(document.getElementById('hiitWork').value)||30;
-  const rest=Number(document.getElementById('hiitRest').value)||15;
-  hiitState.round=1; hiitState.phase='work'; hiitState.secsLeft=work;
-  document.getElementById('hiitDisplay').innerText = `Round 1/${rounds} — Work ${hiitState.secsLeft}s`;
-  hiitTimer = setInterval(()=>{
-    hiitState.secsLeft--;
-    if(hiitState.secsLeft<=0){
-      if(hiitState.phase==='work'){ hiitState.phase='rest'; hiitState.secsLeft=rest; }
-      else { hiitState.round++; if(hiitState.round>rounds){ stopHIIT(); toast('HIIT complete'); return } hiitState.phase='work'; hiitState.secsLeft=work; }
-    }
-    document.getElementById('hiitDisplay').innerText = `Round ${hiitState.round}/${rounds} — ${hiitState.phase.toUpperCase()} ${hiitState.secsLeft}s`;
-  },1000);
-  toast('HIIT started');
-}
-function stopHIIT(){ clearInterval(hiitTimer); hiitTimer=null; hiitState={round:0,phase:'stopped',secsLeft:0}; document.getElementById('hiitDisplay').innerText='Stopped' }
-
-/* ---------------------------
-   AI Bot (local KB)
-   --------------------------- */
-const botKB = [
-  {intent:['diet','meal','calorie','kcal'],reply:(q)=>`For a balanced day: Breakfast — eggs/oats; Lunch — chicken/veg/rice; Snacks — fruits, nuts; Dinner — lean protein + veg. Need a full custom meal plan?`},
-  {intent:['protein','supplement','whey','amino'],reply:(q)=>`Good protein sources: chicken, eggs, whey, yogurt, lentils. Aim ~1.6-2.2g/kg protein if you're building muscle.`},
-  {intent:['lose weight','fat loss','cut'],reply:(q)=>`To lose fat: aim for a 300-500 kcal deficit, keep protein high, maintain resistance training and add 20-30 mins cardio 3-5x/week.`},
-  {intent:['gain muscle','bulk','mass'],reply:(q)=>`To gain mass: small calorie surplus (200-400 kcal), progressive overload in training, protein ~1.6-2.2g/kg, sleep & recovery.`},
-  {intent:['exercise','workout','routine'],reply:(q)=>`Try this: 3x/week full-body: squats, press, row, deadlift/hinge, core. Or split routines 4-5x/week for advanced users.`},
-  {intent:['beginner','start gym','new'],reply:(q)=>`Start with 8-12 weeks of basic strength training: 3 full-body sessions per week focusing on form. Keep workouts short and consistent.`},
-  {intent:['timer','stopwatch','hiit'],reply:(q)=>`Use the built-in stopwatch and HIIT timer — set work/rest intervals and rounds. I can suggest intervals if you tell me goal.`},
-  {intent:['default'],reply:(q)=>`I can help with meals, workouts, timers, and protein. Try: "How many calories should I eat?" or "Give me a beginner chest workout."`}
-];
-
-function botSend(){
-  const q = document.getElementById('botInput').value.trim();
-  if(!q) return;
-  const box = document.getElementById('chatBox');
-  const userEl = document.createElement('div'); userEl.className='msg user'; userEl.innerText=q; box.appendChild(userEl);
-  document.getElementById('botInput').value='';
-  const lc = q.toLowerCase();
-  let best=null, bestScore=0;
-  botKB.forEach(k=>{
-    let score=0; k.intent.forEach(term=>{ if(lc.includes(term)) score++; });
-    if(score>bestScore){ best=k; bestScore=score; }
-  });
-  let reply = best ? best.reply(q) : botKB.find(k=>k.intent.includes('default')).reply(q);
-  if(/\bcalor/i.test(lc) && !/\b(weight|kg|lose|gain|maintain)/i.test(lc)){
-    const est = estimateCalories(profile);
-    reply += `\nEstimated maintenance: ~${est} kcal/day based on your profile.`;
-  }
-  if(lc.includes('how many calories') || lc.includes('calories should i')){
-    reply = `Estimated maintenance calories: ~${estimateCalories(profile)} kcal/day. For fat loss subtract 300-500 kcal, for gain add 200-400 kcal.`;
-  }
-  if(lc.includes('beginner') && lc.includes('workout')){
-    reply = 'Beginner full-body: Squats 3x8, Push-ups 3x8, Dumbbell Row 3x8, Plank 3x30s. Increase reps weekly.';
-  }
-  const botEl = document.createElement('div'); botEl.className='msg bot'; botEl.innerText=reply;
-  box.appendChild(botEl); box.scrollTop = box.scrollHeight;
-}
-
-function estimateCalories(p){
-  const w = p.weight||70, h=p.height||170, age=p.age||25;
-  let bmr = p.gender==='male' ? 10*w + 6.25*h - 5*age + 5 : 10*w + 6.25*h - 5*age - 161;
-  return Math.round(bmr * (p.activity || 1.55));
-}
-
-/* ---------------------------
-   Home auto-fill & init
-   --------------------------- */
-function generateDailyPlan(){
-  const cals = estimateCalories(profile);
-  const proteinAmt = Math.round((profile.weight||70)*1.8);
-  document.getElementById('todayDiet').innerHTML =
-    `<strong>Calories goal:</strong> ${cals} kcal<br>
-     <strong>Breakfast:</strong> 2 eggs, oats, banana<br>
-     <strong>Lunch:</strong> Chicken + rice + veg<br>
-     <strong>Snack:</strong> Greek yogurt + nuts<br>
-     <strong>Dinner:</strong> Fish/Paneer + salad<br>
-     <div style="margin-top:8px" class="small muted">Protein target: <strong>${proteinAmt} g</strong></div>`;
-  const wk = presets['beginner'];
-  document.getElementById('todayWorkout').innerHTML = wk.map(i=>`<div style="margin-bottom:6px"><strong>${i.name}</strong> — ${i.sets}×${i.reps}</div>`).join('');
-  document.getElementById('statProtein').innerText = `Protein: ${proteinAmt} g`;
-  document.getElementById('statCalories').innerText = `Calories: ${cals}`;
-}
-generateDailyPlan();
-
-/* ---------------------------
-   Export / Import backup
-   --------------------------- */
+/* -----------------------
+   Export / Import (backup)
+   ----------------------- */
 function exportData(){
-  const data = {
-    profile: storage.get('gymora_profile', {}),
-    logs: storage.get('gymora_logs', []),
-    weights: storage.get('gymora_weights', [])
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='gymora-backup.json'; a.click();
-  URL.revokeObjectURL(url);
-  toast('Exported data');
-}
-function importData(){
-  const input = document.createElement('input'); input.type='file'; input.accept='application/json';
-  input.onchange = (ev)=>{
-    const f = ev.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      try{
-        const obj = JSON.parse(e.target.result);
-        if(obj.profile) storage.set('gymora_profile', obj.profile);
-        if(obj.logs) storage.set('gymora_logs', obj.logs);
-        if(obj.weights) storage.set('gymora_weights', obj.weights);
-        toast('Imported data');
-        location.reload();
-      }catch(err){ toast('Invalid file') }
+    const data = {
+        profile: storage.get('gymora_profile', {}),
+        logs: storage.get('gymora_logs', []),
+        weights: storage.get('gymora_weights', [])
     };
-    reader.readAsText(f);
-  };
-  input.click();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gymora-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast('Exported');
 }
 
-/* ---------------------------
-   UI init & bindings
-   --------------------------- */
-(function initUI(){
-  document.getElementById('height').value = profile.height;
-  document.getElementById('weight').value = profile.weight;
-  document.getElementById('age').value = profile.age;
-  document.getElementById('gender').value = profile.gender;
-  document.getElementById('activity').value = profile.activity;
-  loadLogs();
-  renderWeightChart();
-  document.getElementById('aiTip').innerText = 'Consistency beats perfection. Train regularly & sleep well.';
+function importData(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = (e)=>{
+        const f = e.target.files[0];
+        if(!f) return;
+        const reader = new FileReader();
+        reader.onload = (ev)=>{
+            try{
+                const obj = JSON.parse(ev.target.result);
+                if(obj.profile) storage.set('gymora_profile', obj.profile);
+                if(obj.logs) storage.set('gymora_logs', obj.logs);
+                if(obj.weights) storage.set('gymora_weights', obj.weights);
+                toast('Imported');
+                setTimeout(()=> location.reload(), 600);
+            }catch(err){
+                toast('Import failed');
+            }
+        };
+        reader.readAsText(f);
+    };
+    input.click();
+}
+
+/* -----------------------
+   Small utilities & safety
+   ----------------------- */
+function toast(txt, ms=2000){
+    const root = document.getElementById('toastRoot') || document.body;
+    const d = document.createElement('div');
+    d.className = 'toast';
+    d.innerText = txt;
+    d.style.opacity = 1;
+    root.appendChild(d);
+    setTimeout(()=>{ d.style.opacity = 0; d.style.transform = 'translateY(8px)'; }, ms-300);
+    setTimeout(()=>{ try{ root.removeChild(d); }catch(e){} }, ms);
+}
+
+/* -----------------------
+   Quick bindings on load
+   ----------------------- */
+(function finalInit(){
+    // populate small helpers if present
+    try{
+        const prof = storage.get('gymora_profile', null);
+        if(prof){
+            if(document.getElementById('bmiHeight')) document.getElementById('bmiHeight').value = prof.height || '';
+            if(document.getElementById('bmiWeight')) document.getElementById('bmiWeight').value = prof.weight || '';
+            if(document.getElementById('calWeight')) document.getElementById('calWeight').value = prof.weight || '';
+            if(document.getElementById('calHeight')) document.getElementById('calHeight').value = prof.height || '';
+            if(document.getElementById('calAge')) document.getElementById('calAge').value = prof.age || '';
+        }
+    }catch(e){}
+    // ensure sections nav works if user used button click (some buttons use onclick)
+    document.querySelectorAll('.sidebar button').forEach(b=>{
+        // keep existing handlers; add safe fallback
+        b.addEventListener('touchstart', ()=> b.classList.add('active'));
+        b.addEventListener('touchend', ()=> b.classList.remove('active'));
+    });
+    // final log load
+    try{ loadLogs(); }catch(e){}
 })();
 
-document.querySelectorAll('.navbtn').forEach(b=>{
-  b.addEventListener('click', (e)=>navTo(e));
-});
+/* -----------------------
+   End of JS
+   ----------------------- */
 </script>
 </body>
 </html>
