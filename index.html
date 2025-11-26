@@ -1,383 +1,466 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="file_00000000c29c7206a2a5570d93943cc1.png">
-<link rel="apple-touch-icon" href="file_00000000c29c7206a2a5570d93943cc1.png">
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>GYMora — Workout Tracker</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GYMora — Personal Fitness Hub</title>
 
-  <meta name="theme-color" content="#0b1724">
-  <link rel="icon" type="image/png" href="file_00000000c29c7206a2a5570d93943cc1.png">
+<!-- Chart.js CDN for progress charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <style>
-    /* Minimal modern mobile-friendly styles (tailored) */
-    :root{
-      --bg:#071024; --card:#0b1220; --muted:#95a3b8; --accent:#00d4ff;
-      --radius:14px; --glass: rgba(255,255,255,0.03);
-      --glass-2: rgba(255,255,255,0.02);
-      font-family: Inter, Roboto, system-ui, -apple-system, "Segoe UI", Arial;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071024 0%, #071a2f 100%);color:#e6eef8}
-    .wrap{max-width:920px;margin:16px auto;padding:16px}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .logo{width:54px;height:54px;background:var(--accent);border-radius:12px;display:grid;place-items:center;color:#071024;font-weight:700;font-size:20px}
-    h1{font-size:18px;margin:0}
-    p.lead{color:var(--muted);margin:0;font-size:13px}
+<style>
+  /* Basic reset & variables */
+  :root{
+    --bg: #0f1724;            /* dark background base */
+    --card: #0b1220;
+    --muted: #94a3b8;
+    --accent: linear-gradient(90deg,#6b5bff,#ff7bac);
+    --accent-solid: #7b66ff;
+    --glass: rgba(255,255,255,0.03);
+    --radius: 14px;
+    --outline: 2px;
+    --success: #22c55e;
+  }
+  :root.light{
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --muted: #475569;
+    --accent-solid: #6b5bff;
+    --glass: rgba(0,0,0,0.03);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    background:var(--bg); color: #e6eef8;-webkit-font-smoothing:antialiased}
+  body.light{color:#0b1220}
+  /* app shell */
+  .app{
+    display:grid;
+    grid-template-columns: 72px 1fr;
+    min-height:100vh;
+  }
+  /* SIDEBAR */
+  .sidebar{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+    padding:18px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    border-right:1px solid rgba(255,255,255,0.03);
+  }
+  .logo{
+    width:48px;height:48px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:18px;
+    background:var(--accent-solid);
+    color:white; box-shadow:0 6px 18px rgba(123,102,255,0.18);
+    transform:translateY(0); transition:all .2s;
+  }
+  .logo:active{transform:translateY(2px) scale(.98)}
+  .navbtn{
+    width:48px;height:48px;border-radius:12px;border:var(--outline) solid rgba(255,255,255,0.03);
+    background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;
+    cursor:pointer; transition:transform .12s, background .18s, color .18s; font-size:14px;
+  }
+  .navbtn:hover{transform:translateY(-4px); color:white; background:var(--glass)}
+  .navbtn.active{background:linear-gradient(180deg, rgba(123,102,255,0.14), rgba(255,124,160,0.06)); color:white}
+  .sidebar .spacer{flex:1}
+  /* TOPBAR + CONTENT */
+  .main{
+    padding:14px;
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;
+  }
+  .search{
+    flex:1;background:var(--card);padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+    display:flex;gap:8px;align-items:center;min-width:0;
+  }
+  .search input{flex:1;border:0;background:transparent;color:inherit;outline:none}
+  .outline-btn{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;
+    border:var(--outline) solid var(--accent-solid); background:transparent;color:inherit;cursor:pointer;
+    transition:transform .12s, box-shadow .12s;
+  }
+  .outline-btn:active{transform:scale(.98)}
+  .outline-btn .dot{width:10px;height:10px;border-radius:3px;background:linear-gradient(90deg,#6b5bff,#ff7bac)}
+  .card{
+    background:var(--card); border-radius:var(--radius); padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    margin-bottom:14px; border:1px solid rgba(255,255,255,0.02);
+  }
+  .grid{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:14px;
+  }
+  .col-4{grid-column:span 4}
+  .col-8{grid-column:span 8}
+  .col-6{grid-column:span 6}
+  .col-12{grid-column:span 12}
+  h1,h2{margin:0 0 8px 0}
+  p{margin:0;color:var(--muted)}
+  /* small utilities */
+  .muted{color:var(--muted);font-size:13px}
+  .kbd{padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.08);font-weight:600}
+  /* responsive */
+  @media (max-width:900px){
+    .app{grid-template-columns: 64px 1fr}
+    .grid{grid-template-columns:repeat(6,1fr)}
+    .col-8{grid-column:span 6}
+    .col-4{grid-column:span 6}
+  }
+  @media (max-width:640px){
+    .app{grid-template-columns: 56px 1fr}
+    .grid{grid-template-columns:repeat(4,1fr)}
+    .col-6{grid-column:span 4}
+    .col-4{grid-column:span 4}
+  }
 
-    /* grid */
-    main{display:grid;grid-template-columns:1fr;gap:14px}
-    .card{background:linear-gradient(180deg,var(--card), rgba(11,18,36,0.8));border-radius:var(--radius);padding:12px;box-shadow:0 6px 18px rgba(2,8,20,0.5);border:1px solid rgba(255,255,255,0.02)}
-    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
-    input[type=text], select, input[type=number]{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:14px}
-    .row{display:flex;gap:8px}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--accent),#7dfcff);color:#071024;font-weight:600;cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.25);transform:translateY(0);transition:transform .12s,box-shadow .12s}
-    .btn:active{transform:translateY(2px)}
-    .btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04);box-shadow:none}
-    .list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-    .exercise{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
-    .ex-meta{display:flex;gap:10px;align-items:center}
-    .ex-name{font-weight:700}
-    .ex-sub{font-size:12px;color:var(--muted)}
-    .small{font-size:12px;color:var(--muted)}
-    .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-    .stat{background:var(--glass-2);padding:8px;border-radius:8px;font-size:13px}
+  /* Form styles */
+  label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+  input[type="number"], input[type="text"], select, textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;
+  }
+  .btn-primary{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:var(--accent-solid);color:white;
+    cursor:pointer; box-shadow: 0 8px 30px rgba(99,73,255,0.14); transition:transform .12s;
+  }
+  .btn-primary:active{transform:translateY(2px) scale(.995)}
+  .mini{padding:8px 10px;font-size:13px;border-radius:10px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .small{font-size:13px;color:var(--muted)}
 
-    .center{display:flex;align-items:center;justify-content:center}
-    .muted{color:var(--muted)}
+  /* toast */
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--card);padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 36px rgba(2,6,23,0.6)}
+  /* outlined animated click effect for .outline-btn already present */
+  /* chart card */
+  .chart-wrap{height:210px}
+  /* ai chat */
+  #chatBox{height:220px;overflow:auto;padding:10px;border-radius:10px;background:rgba(0,0,0,0.03);margin-bottom:8px}
+  .msg{padding:8px 10px;border-radius:10px;margin-bottom:8px;display:inline-block;max-width:86%}
+  .msg.user{background:linear-gradient(90deg,#6b5bff22,#ff7bac22);align-self:flex-end}
+  .msg.bot{background:rgba(255,255,255,0.02)}
+  /* tracker table */
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
+  .muted-2{color:rgba(255,255,255,0.55);font-size:12px}
 
-    /* tracker modal */
-    .overlay{position:fixed;inset:0;background:rgba(2,6,12,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:80}
-    .modal{width:100%;max-width:420px;background:linear-gradient(180deg,#0e1726,#081426);padding:14px;border-radius:12px;box-shadow:0 20px 50px rgba(2,6,20,0.6);border:1px solid rgba(255,255,255,0.03)}
-    .big{font-size:28px;font-weight:700}
-    .timer{font-size:36px;font-weight:800;text-align:center;margin:8px 0}
-    .rep-controls{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+  /* small animation for icons */
+  .pulse{animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
 
-    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;padding-bottom:40px}
-
-    /* responsive */
-    @media(min-width:720px){
-      main{grid-template-columns:1fr 360px}
-    }
-  </style>
+  /* nice rounded inputs focus */
+  input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 6px 20px rgba(123,102,255,0.06);border-color:rgba(123,102,255,0.4)}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">FT</div>
-      <div>
-        <h1>FitTrackr — Workout Tracker</h1>
-        <p class="lead">Add exercises, track reps & sets, save daily workouts.</p>
-      </div>
-    </header>
 
-    <main>
-      <!-- left: add & list -->
-      <section>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <label for="ex-name">Exercise name</label>
-              <input id="ex-name" type="text" placeholder="Push Ups, Squats, Plank..." />
-            </div>
-            <div style="width:110px">
-              <label for="ex-group">Muscle</label>
-              <select id="ex-group">
-                <option value="Full Body">Full Body</option>
-                <option value="Chest">Chest</option>
-                <option value="Legs">Legs</option>
-                <option value="Arms">Arms</option>
-                <option value="Core">Core</option>
-                <option value="Cardio">Cardio</option>
-              </select>
-            </div>
-          </div>
+<div id="app" class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="logo" title="GYMora">GYM</div>
 
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <div style="width:120px">
-              <label for="ex-reps">Reps</label>
-              <input id="ex-reps" type="number" min="1" value="10" />
-            </div>
-            <div style="width:120px">
-              <label for="ex-sets">Sets</label>
-              <input id="ex-sets" type="number" min="1" value="3" />
-            </div>
+    <button class="navbtn active" data-page="dashboard" title="Dashboard" aria-label="Dashboard" onclick="navTo(event)">🏠</button>
+    <button class="navbtn" data-page="calc" title="Calculators" onclick="navTo(event)">⚖️</button>
+    <button class="navbtn" data-page="bot" title="AI Bot" onclick="navTo(event)">🤖</button>
+    <button class="navbtn" data-page="workouts" title="Workouts" onclick="navTo(event)">🏋️</button>
+    <button class="navbtn" data-page="timer" title="Timer" onclick="navTo(event)">⏱️</button>
+    <div class="spacer"></div>
+    <button class="navbtn" id="themeToggle" title="Toggle theme" onclick="toggleTheme()">🌙</button>
+    <button class="navbtn" title="Export" onclick="exportData()">⬇️</button>
+    <button class="navbtn" title="Import" onclick="importData()">⬆️</button>
+  </aside>
 
-            <div style="flex:1;display:flex;align-items:flex-end;justify-content:flex-end">
-              <button id="add-ex" class="btn">Add Exercise</button>
-            </div>
-          </div>
-
-          <div class="list" id="ex-list" style="margin-top:12px">
-            <!-- exercises inserted here -->
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h3 style="margin:0">Today</h3>
-              <div class="muted small">Saved workouts for today</div>
-            </div>
-            <div id="today-count" class="small muted">0 items</div>
-          </div>
-
-          <div id="today-list" style="margin-top:10px"></div>
-        </div>
-      </section>
-
-      <!-- right: stats and quick actions -->
-      <aside>
-        <div class="card">
-          <h3 style="margin:0">Quick Actions</h3>
-          <div class="stat-row" style="margin-top:10px">
-            <div class="stat">Exercises: <span id="stat-ex">0</span></div>
-            <div class="stat">Workouts today: <span id="stat-wk">0</span></div>
-          </div>
-
-          <div style="margin-top:12px">
-            <button id="clear-all" class="btn ghost" style="width:100%">Clear local data</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3 style="margin:0">How to use</h3>
-          <p class="muted small" style="margin-top:6px">
-            Add exercise → Press "Do" to start a set → Use + / − to count reps → Finish set → Mark complete.
-          </p>
-        </div>
-      </aside>
-    </main>
-
-    <footer class="muted">Local-first: your data is stored on this device only.</footer>
-  </div>
-
-  <!-- modal / overlay for doing exercise -->
-  <div class="overlay" id="overlay">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div id="modal-name" class="big">Push Ups</div>
-          <div id="modal-sub" class="muted small">Chest • 3 sets • 10 reps</div>
-        </div>
-        <div><button id="close-modal" class="btn ghost">Close</button></div>
+  <!-- MAIN -->
+  <main class="main" role="main">
+    <div class="topbar">
+      <div class="search card" style="max-width:760px">
+        <svg width="18" height="18" viewBox="0 0 24 24" style="opacity:.7"><path fill="currentColor" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"></path></svg>
+        <input id="quickSearch" placeholder="Search exercises, diets, bot..." onkeydown="if(event.key==='Enter'){quickSearch()}">
+        <button class="outline-btn" onclick="quickSearch()"><span class="dot"></span>Search</button>
       </div>
 
-      <div class="timer center" id="modal-set">Set 1 / 3</div>
-      <div class="rep-controls">
-        <button id="dec-rep" class="btn ghost">−</button>
-        <div style="min-width:60px;text-align:center">
-          <div class="small muted">Reps</div>
-          <div id="rep-count" style="font-size:22px;font-weight:700">0</div>
-        </div>
-        <button id="inc-rep" class="btn">+</button>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-top:12px;justify-content:center">
-        <button id="finish-set" class="btn">Finish Set</button>
-        <button id="skip-set" class="btn ghost">Skip Set</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="small muted">Welcome, <strong id="userName">User</strong></div>
+        <button class="outline-btn" onclick="openAssistant()"><span style="font-weight:700">AI</span> Bot</button>
+        <button class="btn-primary" onclick="startQuickWorkout()">Start Quick</button>
       </div>
     </div>
-  </div>
 
-  <script>
-    /* App logic: localStorage based simple workout tracker */
-    const LS_KEY_EX = "fit_exercises_v1";
-    const LS_KEY_LOG = "fit_logs_v1";
+    <!-- PAGES -->
+    <section id="dashboard" class="page">
+      <div class="grid">
+        <div class="card col-8">
+          <h1>Daily Plan</h1>
+          <p class="small muted">Auto-generated based on your profile and goals</p>
 
-    // DOM
-    const exName = document.getElementById("ex-name");
-    const exGroup = document.getElementById("ex-group");
-    const exReps = document.getElementById("ex-reps");
-    const exSets = document.getElementById("ex-sets");
-    const addBtn = document.getElementById("add-ex");
-    const exList = document.getElementById("ex-list");
-    const todayCount = document.getElementById("today-count");
-    const todayList = document.getElementById("today-list");
-    const statEx = document.getElementById("stat-ex");
-    const statWk = document.getElementById("stat-wk");
-    const clearAll = document.getElementById("clear-all");
+          <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px" class="card">
+              <h2>Today's Workout</h2>
+              <div id="todayWorkout">Loading...</div>
+              <div style="margin-top:8px" class="row">
+                <button class="outline-btn mini" onclick="completeWorkout()">Mark Complete</button>
+                <button class="outline-btn mini" onclick="logWorkoutManually()">Log Manually</button>
+              </div>
+            </div>
 
-    // modal
-    const overlay = document.getElementById("overlay");
-    const modalName = document.getElementById("modal-name");
-    const modalSub = document.getElementById("modal-sub");
-    const modalSet = document.getElementById("modal-set");
-    const repCount = document.getElementById("rep-count");
-    const incRep = document.getElementById("inc-rep");
-    const decRep = document.getElementById("dec-rep");
-    const finishSet = document.getElementById("finish-set");
-    const skipSet = document.getElementById("skip-set");
-    const closeModal = document.getElementById("close-modal");
+            <div style="flex:1;min-width:220px" class="card">
+              <h2>Today's Diet</h2>
+              <div id="todayDiet">Loading...</div>
+            </div>
 
-    // state
-    let exercises = [];
-    let logs = []; // saved completed sets
-    let active = null; // {id, setIndex, targetSets, targetReps, name, group}
-    loadFromStorage();
-
-    // helpers
-    function uid(){ return 'id_'+Math.random().toString(36).slice(2,9) }
-    function todayKey(){ let d=new Date(); return d.toISOString().slice(0,10) }
-    function saveExercises(){ localStorage.setItem(LS_KEY_EX, JSON.stringify(exercises)) }
-    function saveLogs(){ localStorage.setItem(LS_KEY_LOG, JSON.stringify(logs)) }
-
-    function loadFromStorage(){
-      try{
-        exercises = JSON.parse(localStorage.getItem(LS_KEY_EX)) || [];
-        logs = JSON.parse(localStorage.getItem(LS_KEY_LOG)) || [];
-      }catch(e){ exercises=[]; logs=[] }
-      renderList();
-      renderStats();
-      renderToday();
-    }
-
-    // render exercise list
-    function renderList(){
-      exList.innerHTML = "";
-      exercises.forEach(ex=>{
-        const el = document.createElement("div");
-        el.className = "exercise";
-        el.innerHTML = `
-          <div class="ex-meta">
-            <div>
-              <div class="ex-name">${escape(ex.name)}</div>
-              <div class="ex-sub">${ex.group} • ${ex.sets} sets • ${ex.reps} reps</div>
+            <div style="min-width:140px" class="card">
+              <h2>Quick Stats</h2>
+              <p class="small"><strong id="statBMI">BMI: —</strong></p>
+              <p class="small"><strong id="statCalories">Calories: —</strong></p>
+              <p class="small"><strong id="statProtein">Protein: —</strong></p>
             </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn ghost btn-edit" data-id="${ex.id}">Edit</button>
-            <button class="btn ghost btn-del" data-id="${ex.id}">Del</button>
-            <button class="btn btn-do" data-id="${ex.id}">Do</button>
+
+          <div style="margin-top:14px" class="card">
+            <h2>Progress</h2>
+            <div class="chart-wrap">
+              <canvas id="weightChart"></canvas>
+            </div>
+            <div class="small muted" style="margin-top:8px">Log weight below to view chart</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input type="number" id="logWeight" placeholder="Weight (kg)">
+              <button class="outline-btn" onclick="addWeight()">Log</button>
+            </div>
           </div>
-        `;
-        exList.appendChild(el);
-      });
-      statEx.textContent = exercises.length;
-    }
+        </div>
 
-    // render today log
-    function renderToday(){
-      const key = todayKey();
-      const today = logs.filter(l=>l.date===key);
-      todayList.innerHTML = "";
-      if(today.length===0){
-        todayList.innerHTML = `<div class="muted small">No workouts logged today.</div>`;
-      }else{
-        today.forEach(t=>{
-          const d = document.createElement("div");
-          d.className = "exercise";
-          d.innerHTML = `<div>
-            <div class="ex-name">${escape(t.name)}</div>
-            <div class="ex-sub">${t.group} • set ${t.set} • ${t.reps} reps</div>
-            <div class="small muted">${t.time}</div>
-          </div>`;
-          todayList.appendChild(d);
-        });
-      }
-      todayCount.textContent = today.length + " items";
-      statWk.textContent = today.length;
-    }
+        <div class="col-4">
+          <div class="card">
+            <h2>Protein Guide</h2>
+            <p class="small muted">What to eat for protein</p>
+            <ul id="proteinList" style="margin-top:8px"></ul>
+          </div>
 
-    // Add exercise
-    addBtn.addEventListener("click", ()=>{
-      const name = exName.value.trim();
-      const group = exGroup.value;
-      const reps = parseInt(exReps.value) || 10;
-      const sets = parseInt(exSets.value) || 3;
-      if(!name){ alert("Please enter exercise name"); return; }
-      const item = { id: uid(), name, group, reps, sets };
-      exercises.unshift(item);
-      saveExercises();
-      renderList();
-      exName.value=""; exReps.value=10; exSets.value=3;
-    });
+          <div class="card">
+            <h2>Stopwatch</h2>
+            <div id="stopwatchDisplay" style="font-size:20px">00:00:00</div>
+            <div style="margin-top:8px" class="row">
+              <button class="outline-btn mini" onclick="swStart()">Start</button>
+              <button class="outline-btn mini" onclick="swStop()">Stop</button>
+              <button class="outline-btn mini" onclick="swReset()">Reset</button>
+            </div>
+          </div>
 
-    // delegate buttons
-    exList.addEventListener("click", (e)=>{
-      const t = e.target;
-      if(t.matches(".btn-del")){
-        const id = t.dataset.id;
-        exercises = exercises.filter(x=>x.id!==id);
-        saveExercises(); renderList();
-      }else if(t.matches(".btn-edit")){
-        const id = t.dataset.id; const ex = exercises.find(x=>x.id===id);
-        if(!ex) return;
-        // simple inline edit prompt
-        const name = prompt("Edit name:", ex.name);
-        if(name!==null){ ex.name = name.trim()||ex.name; saveExercises(); renderList(); }
-      }else if(t.matches(".btn-do")){
-        const id = t.dataset.id; const ex = exercises.find(x=>x.id===id);
-        if(!ex) return;
-        startExercise(ex);
-      }
-    });
+          <div class="card">
+            <h2>AI Tip</h2>
+            <p id="aiTip">Ask the AI Bot about exercise form, diet swaps, or how to progress.</p>
+            <div style="margin-top:8px" class="small muted">Tip updates every day</div>
+          </div>
+        </div>
 
-    // start exercise
-    function startExercise(ex){
-      active = { id: ex.id, name: ex.name, group: ex.group, reps: ex.reps, sets: ex.sets, setIndex:1, repCount:0 };
-      showModalForActive();
-    }
+      </div>
+    </section>
 
-    function showModalForActive(){
-      if(!active) return;
-      modalName.textContent = active.name;
-      modalSub.textContent = `${active.group} • ${active.sets} sets • ${active.reps} reps`;
-      modalSet.textContent = `Set ${active.setIndex} / ${active.sets}`;
-      repCount.textContent = active.repCount;
-      overlay.style.display = "flex";
-    }
+    <section id="calc" class="page" style="display:none;">
+      <div class="grid">
+        <div class="card col-6">
+          <h2>BMI & Body</h2>
+          <label>Height (cm)</label><input id="height" type="number" placeholder="170">
+          <label>Weight (kg)</label><input id="weight" type="number" placeholder="70">
+          <label>Age</label><input id="age" type="number" placeholder="25">
+          <label>Gender</label>
+          <select id="gender"><option value="male">Male</option><option value="female">Female</option></select>
+          <label>Activity</label>
+          <select id="activity">
+            <option value="1.2">Sedentary</option>
+            <option value="1.375">Light</option>
+            <option value="1.55">Moderate</option>
+            <option value="1.725">Active</option>
+            <option value="1.9">Very Active</option>
+          </select>
+          <div style="margin-top:10px" class="row">
+            <button class="btn-primary" onclick="calculateAll()">Calculate</button>
+            <button class="outline-btn" onclick="saveProfile()">Save</button>
+          </div>
+          <div style="margin-top:10px" id="calcResult"></div>
+        </div>
 
-    incRep.addEventListener("click", ()=>{ active.repCount = (active.repCount||0)+1; repCount.textContent=active.repCount });
-    decRep.addEventListener("click", ()=>{ active.repCount = Math.max(0,(active.repCount||0)-1); repCount.textContent=active.repCount });
+        <div class="card col-6">
+          <h2>Macro Helper</h2>
+          <p class="small muted">Adjust percentages if you want</p>
+          <label>Protein %</label><input id="macroProtein" type="number" value="30">
+          <label>Fat %</label><input id="macroFat" type="number" value="25">
+          <label>Carbs %</label><input id="macroCarb" type="number" value="45">
+          <div style="margin-top:10px" class="row">
+            <button class="outline-btn" onclick="calcMacros()">Get Macros</button>
+          </div>
+          <div style="margin-top:10px" id="macroResult"></div>
+        </div>
 
-    finishSet.addEventListener("click", ()=>{
-      // save set as completed
-      const now = new Date();
-      logs.unshift({
-        id: uid(),
-        date: todayKey(),
-        time: now.toLocaleTimeString(),
-        name: active.name,
-        group: active.group,
-        set: active.setIndex,
-        reps: active.repCount
-      });
-      saveLogs(); renderToday();
-      // move to next set or finish
-      if(active.setIndex < active.sets){
-        active.setIndex++;
-        active.repCount = 0;
-        showModalForActive();
-      }else{
-        alert("Workout complete for " + active.name);
-        active = null; overlay.style.display="none";
-      }
-    });
+        <div class="card col-12">
+          <h2>Protein Sources</h2>
+          <div id="proteinSources" class="row"></div>
+        </div>
+      </div>
+    </section>
 
-    skipSet.addEventListener("click", ()=>{
-      if(confirm("Skip this set?")){
-        if(active.setIndex < active.sets){
-          active.setIndex++;
-          active.repCount = 0; showModalForActive();
-        } else { active=null; overlay.style.display="none"; }
-      }
-    });
+    <section id="bot" class="page" style="display:none;">
+      <div class="card" style="display:flex;flex-direction:column">
+        <h2>GYMora AI Bot</h2>
+        <div id="chatBox"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="botInput" placeholder="Ask about workout, diet, supplements..." onkeydown="if(event.key==='Enter'){botSend()}">
+          <button class="outline-btn" onclick="botSend()">Send</button>
+        </div>
+        <div class="small muted" style="margin-top:8px">AI is local rule-based assistant for now — detailed custom plans available soon.</div>
+      </div>
+    </section>
 
-    closeModal.addEventListener("click", ()=>{ if(confirm("Stop current exercise?")){ active=null; overlay.style.display="none"; } });
+    <section id="workouts" class="page" style="display:none;">
+      <div class="grid">
+        <div class="card col-6">
+          <h2>Workout Library</h2>
+          <p class="small muted">Select a preset or create your own</p>
+          <select id="preset">
+            <option value="beginner">Full Body - Beginner</option>
+            <option value="intermediate">Upper/Lower - Intermediate</option>
+            <option value="advanced">Split - Advanced</option>
+          </select>
+          <div style="margin-top:8px" class="row">
+            <button class="btn-primary" onclick="generatePreset()">Generate</button>
+            <button class="outline-btn" onclick="savePreset()">Save Preset</button>
+          </div>
 
-    // clear data
-    clearAll.addEventListener("click", ()=>{
-      if(confirm("Clear all saved exercises and logs?")){ exercises=[]; logs=[]; saveExercises(); saveLogs(); renderList(); renderToday(); }
-    });
+          <div id="presetView" style="margin-top:12px"></div>
+        </div>
 
-    // small escape helper
-    window.addEventListener("keydown",(e)=>{ if(e.key==="Escape"){ overlay.style.display="none"; active=null } });
+        <div class="card col-6">
+          <h2>Workout Log</h2>
+          <table id="logTable"><thead><tr><th>Date</th><th>Workout</th><th>Notes</th></tr></thead><tbody></tbody></table>
+          <div style="margin-top:8px" class="row">
+            <input id="logNote" placeholder="Quick note">
+            <button class="outline-btn" onclick="addLog()">Add Log</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    // util
-    function escape(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
-  </script>
-</body>
-</html>
+    <section id="timer" class="page" style="display:none;">
+      <div class="grid">
+        <div class="card col-6">
+          <h2>Stopwatch</h2>
+          <div id="sw" style="font-size:28px">00:00:00</div>
+          <div style="margin-top:8px" class="row">
+            <button class="btn-primary" onclick="swStart()">Start</button>
+            <button class="outline-btn" onclick="swStop()">Stop</button>
+            <button class="outline-btn" onclick="swReset()">Reset</button>
+          </div>
+        </div>
+
+        <div class="card col-6">
+          <h2>Interval Timer (HIIT)</h2>
+          <label>Rounds</label><input id="hiitRounds" type="number" value="6">
+          <label>Work (sec)</label><input id="hiitWork" type="number" value="30">
+          <label>Rest (sec)</label><input id="hiitRest" type="number" value="15">
+          <div style="margin-top:8px" class="row">
+            <button class="btn-primary" onclick="startHIIT()">Start HIIT</button>
+            <button class="outline-btn" onclick="stopHIIT()">Stop</button>
+          </div>
+          <div style="margin-top:12px" id="hiitDisplay"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div id="toastRoot" style="position:fixed;right:18px;bottom:18px"></div>
+
+<script>
+/* ---------------------------
+   Utilities & localStorage
+   --------------------------- */
+const storage = {
+  get(key, fallback){
+    try{ const v = localStorage.getItem(key); return v?JSON.parse(v):fallback }catch(e){return fallback}
+  },
+  set(key,val){ localStorage.setItem(key,JSON.stringify(val)) }
+}
+
+/* initial user/profile */
+let profile = storage.get('gymora_profile', {
+  name:'Ali', age:25, gender:'male', height:170, weight:70, activity:1.55, goal:'maintain'
+});
+document.getElementById('userName').innerText = profile.name || 'User';
+
+/* theme */
+(function initTheme(){
+  const prefer = localStorage.getItem('gymora_theme');
+  if(prefer === 'light'){ document.body.classList.add('light'); document.documentElement.classList.add('light'); }
+  updateThemeButton();
+})();
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  document.documentElement.classList.toggle('light');
+  localStorage.setItem('gymora_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  updateThemeButton(); toast('Theme changed');
+}
+function updateThemeButton(){
+  const t = document.body.classList.contains('light') ? '🌞' : '🌙';
+  document.getElementById('themeToggle').innerText = t;
+}
+
+/* pages nav */
+function navTo(e){
+  const btn = (e.target.closest) ? e.target.closest('button') : e.target;
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const page = btn.dataset.page;
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById(page).style.display='block';
+}
+
+/* quick search */
+function quickSearch(){
+  const q = document.getElementById('quickSearch').value.toLowerCase();
+  if(!q) return toast('Type something to search');
+  // simple routing: if includes "bot" go to bot, "calc" to calc etc
+  if(q.includes('bot') || q.includes('ai')){ document.querySelector('[data-page="bot"]').click(); return }
+  if(q.includes('bmi')||q.includes('calorie')||q.includes('macro')){ document.querySelector('[data-page="calc"]').click(); return }
+  if(q.includes('timer')||q.includes('hiit')||q.includes('stopwatch')){ document.querySelector('[data-page="timer"]').click(); return }
+  toast('No direct match — try asking the bot');
+}
+
+/* toast */
+function toast(txt, ms=2200){
+  const root = document.getElementById('toastRoot');
+  const d = document.createElement('div');
+  d.className='toast';
+  d.innerText=txt;
+  root.appendChild(d);
+  setTimeout(()=>{ d.style.opacity=0; d.style.transform='translateY(10px)'; }, ms-300);
+  setTimeout(()=>root.removeChild(d), ms);
+}
+
+/* ---------------------------
+   Calculators: BMI, BMR, Macros
+   --------------------------- */
+function calculateAll(){
+  const h = Number(document.getElementById('height').value) || profile.height;
+  const w = Number(document.getElementById('weight').value) || profile.weight;
+  const age = Number(document.getElementById('age').value) || profile.age;
+  const gender = document.getElementById('gender').value || profile.gender;
+  const activity = Number(document.getElementById('activity').value) || profile.activity;
+
+  const bmi = (w/((h/100)*(h/100))).toFixed(1);
+  let bmr;
+  if(gender==='male') bmr = 10*w + 6.25*h - 5*age + 5;
+  else bmr = 10*w + 6.25*h - 5*age - 161;
+  const maintenance = Math.round(bmr * activity);
+
+  document.getElementById('calcResult').innerHTML =
+    `<p class="small">BMI: <strong>${bmi}</strong> — ${bmiInterpret(bmi)}</p>
+     <p class="small">BMR: <strong>${Math.round(bmr)}</strong> kcal/day</p>
+     <p class="small">Maintenance: <strong>${maintenance}</strong> kcal/day</p>`;
+
+  // update stats on dashboard
+  document.getElementById('statBMI').innerText = `BMI: ${bmi}`;
+  document.getElementById('statCalories').innerText = `Calories: ${maintenance}`;
+  // update macros defaults
+  profile.height=h; profile.weight=w; profile.age=age; profile.activity=activity; profile.gender=gender;
+  storage.set('gymora_prof
