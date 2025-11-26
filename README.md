@@ -1,2 +1,2 @@
-# fittrackr
-Single-file fitness tracker app
+# GYMora
+Single-file GYM AURA app
